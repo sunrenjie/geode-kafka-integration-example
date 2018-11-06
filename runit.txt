@@ -1,0 +1,43 @@
+==================================
+Preliminary: to start kafka cluster
+bin/zookeeper-server-start.sh config/zookeeper.properties
+bin/kafka-server-start.sh config/server.properties
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test --from-beginning  # to monitor incoming messages
+
+=================================
+lab1: to sync data from kafka to geode:
+0) Start kafka cluster; see above
+
+1) Run these commands in geode command line (gfsh):
+  start locator --name=locator1
+  configure pdx --read-serialized=true
+  start server --name=server1
+  create region --name=test --type=REPLICATE
+  query --query="select * from /test"
+
+2) Run KafkaJFairyProducerDriver one or more times to generate fake data and feed to kafka.
+
+3) Run KafkaConsumerGeodeLoader as a daemon to sync kafka messages to geode.
+
+4) Examine the test region in geode command line to verify the results:
+  query --query="select * from /test"
+
+
+==================================
+lab2: to sync data from geode to kafka:
+0) Start kafka cluster; see above
+
+1) Run these commands in geode command line (gfsh):
+  start locator --name=locator1
+  configure pdx --read-serialized=true
+  start server --name=server1
+  deploy --dir=/path/to/geode-kafka-integration-example/geode-kafka-listener/build/dependancies
+  y
+  deploy --dir=/path/to/geode-kafka-integration-example/geode-kafka-listener/build/libs
+  y
+  create async-event-queue --id=kafka-queue --listener=example.geode.kafka.KafkaAsyncEventListener --listener-param=bootstrap.servers#localhost:9092 --batch-size=5 --batch-time-interval=1000
+  create region --name=test --type=REPLICATE --async-event-queue-id=kafka-queue
+  query --query="select * from /test"
+
+2) Run Driver to generate fake data and feed to geode; the geode-kafka-listener module deployed on the geode server
+would sync any newly incoming messages to kafka.

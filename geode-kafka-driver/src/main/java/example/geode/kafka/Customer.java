@@ -23,11 +23,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
 @Data
-public class Customer {
+public class Customer implements Serializable {
     private String guid;
     private String firstName;
     private String middleName;
